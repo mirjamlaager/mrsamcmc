@@ -914,7 +914,7 @@ run_mcmc <- function(data = NULL, priors = NULL, configuration = NULL){
   output_dataframe_params <- data.frame(output_matrix_params)
   colnames(output_dataframe_params) <- c("beta","b","s","rho_1","rho_2","phi")
 
-  output_dataframe_statuses <- data.frame(output_dataframe_statuses)
+  output_dataframe_statuses <- data.frame(output_matrix_statuses)
   if (configuration$store_statuses == "AGGREGATED"){
     colnames(output_dataframe_statuses) <- c("N_never_infected","N_acquired","N_imported")
   }

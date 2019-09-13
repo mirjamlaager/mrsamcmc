@@ -10,6 +10,8 @@ vignette: >
   %\VignetteIndexEntry{Introduction}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  
+bibliography: bibliography.bib
 ---
 
 ```{r setup, include = FALSE}
@@ -26,38 +28,173 @@ demonstrate the main functionalities of the package *mrsamcmc*.
 # Example Dataset
 The dataset `patient_data_simulated` is distributed with this package and contains
 simulated admission and discharge dates, test results and antibiotic use of 
-450 patients over 90 days. Data to be analysed with *mrsamcmc* should be in
-the same format as the example dataset we use here. So let's look at the example
-dataset in more detail. It is a list with four elements: `$patients`
-
-Here: explain the data format
-
-
+450 patients over 90 days. 
 ```{r}
 library(mrsamcmc)
 example_dataset <- patient_data_simulated
-head(example_dataset$patients)
 ```
 
-# Brief overview over the MCMC algorithm
-Here: describe what it does. The likelihood functions and cite the papers.
+Data to be analysed with *mrsamcmc* should be in
+the same format as the example dataset we use here. So let's look at the example
+dataset in more detail. It is a list with four elements: `$patients`, 
+`$test_results_positive`, `$test_results_negative` and `$antibiotics`.
 
+## patients
+```{r, look at example dataset}
+head(example_dataset$patients)
+```
+In `$patients` each row corresponds to a patient and the columns are the admission
+and discharge dates of the patient (counted in days from day 1 in the dataset) and
+the day of the first positive test for those patients who were tested positive.
+If a patient was never tested positive, this day is set to 20000.
+
+## test results
+In `$test_results_positive` and `$test_results_negative` each row corresponds to a 
+patient and the entries are the day of a positive or negative test for that patient.
+In the example dataset, there is a total of `r length(which(example_dataset$test_results_positive != 0))`
+positive and a total of `r length(which(example_dataset$test_results_negative != 0))` negative tests.
+
+## antibiotics
+In `$antibiotics` each row corresponds to a patient and the entries are the days 
+on which antibiotics were administered for that patient. Patient 4 for example
+was admitted on day `r example_dataset$patients[4,]$admission` and
+discharged on day `r example_dataset$patients[4,]$discharge` and was
+was on antibiotics on the following days:
+```{r, get antibiotics in example dataset}
+example_dataset$antibiotics[4,example_dataset$antibiotics[4,] != 0]
+```
+
+# Model
+The model implemented in the package *mrsamcmc* very much builds on previous
+methodology as described in @doi:10.1093/biostatistics/kxl017 and @pmid27042253.
+The data augmentation approach implenented in these publications introduces
+additional parameters for the unknown colonisation times for each patient, which
+makes it possible to split the overall likelihood into the following product:
+$$ \Pi(\Omega,t^c| \rho, \varphi, \beta) = \Pi(\Omega|t^c,\rho) \cdot \Pi(t^c | \rho, \beta),  $$
+where $\Omega$ denotes the test results, $t^c$ are the true colonisation times,
+$\rho$ is the test sensitivity, $\phi$ is the probability of a patient being 
+positive on admission and $\beta$ is the transmission rate. The likelihood
+of the colonisation times given the parameters of the transmission models 
+is given by
+$$ \Pi(t^c | \rho, \beta, b, s , \Sigma) = \varphi^{N_p} (1- \varphi)^{N - N_p} 
+\prod_{i: t_i^c = \infty}\left[ \prod_{j=t_i^a}^{t_i^d}(1 - p_{ij}) \right]
+\prod_{i: t_i^c \neq \infty}\left[p_{it_i^c} \prod_{j=t_i^a}^{t_i^c -1}(1 - p_{ij}) \right]$$
+where $N$ is the total number of patients, $N_p$ is the number of patients who
+are colonised on admission, $t_i^c$ denotes the day of acquisition of patient $i$ 
+and is set to infinity if the patient stays susceptible, $t_i^a$ and $t_i^d$
+denote the day of admission and discharge of patient $i$ and $p_{ij}$ is the probability
+of patient $i$ becoming colonised on day $j$ which is defined below. Inference is 
+conducted via MCMC, where each step consists of updating the parameters of the transmission 
+rates using the current colonisation times and then updating the colonisation 
+times of a subset of the patients.
+
+
+## Accounting for imperfect testing
+As in @doi:10.1093/biostatistics/kxl017 and @pmid27042253 we account for imperfect
+test sensitivity, and model the likelihood of the test results given the
+test sensitivity as a binomial distribution. In addition, we allow for a multiplicative
+effect of antibiotics on test sensitivity. The likelihood of the test results given
+the true colonisation times and the test sensitivity is given by
+$$ \Pi(\Omega | t^c, \rho, r, \Sigma) = \rho^{TP_{nabx}} \cdot (1 - \rho)^{FN_{nabx}}
+\cdot (r\rho)^{TP_{abx}} \cdot (1 - r \rho)^{FN_{abx}} $$
+
+Where $TP_{nabx}$, $FN_{nabx}$, $TP_{abx}$ and $FN_{abx}$ denote the total number
+of true positive ($TP$) and false negative ($FN$) tests conducted while a patient
+was on ($_{abx}$) or off ($_{nabx}$) antibiotics. The function `run_mcmc()` can 
+be configured such that the effect is set to 1 and a baseline test sensitivity only is inferred.
+
+## Accounting for the effect of antibiotics
+We also introduce an effect of antibiotics on transmissibility and susceptibility
+and denote the probability of patient i becoming colonised on day j as:
+$$p_{ij} = 1 - \exp(-s^{1_{\sigma_{ij}=1}}(\beta C_1(j) + b \beta C_2(j))) $$
+where $s$ denotes the effect of antibiotics on test sensitivity, $b$ denotes
+the effect of antibiotcs on transmissibility, $C_1(j)$ is the total number of
+colonised patients on day $j$ who are not on antibioitcs, $C_2(j)$ is the
+total number of colonised patients on day $j$ who are on antibiotics and 
+$\sigma_{ij}$ is 1 if patient $i$ is on antibiotics on day $j$ and 0 otherwise. 
+The function `run_mcmc()` can be configured such that the effects on susceptibility
+and transmissibility are set to 1 and a baseline transmission
+rate only is inferred.
 
 
 # Running the MCMC with customised settings
-Here: show how to generate config and priors
+In this section we will run the MCMC algorithm with the example dataset and
+show how to customise the settings of the MCMC and use custom prior distributions.
+The function `run_mcmc()` has three arguments, `data`, `priors` and `configuration`.
+If none of these arguments are specified, the function runs with default priors and
+configuration. Here, we will use some custom settings.
+
+## Customise configuration
+We generate a custom configuration using `generate_configuration()`. This function
+returns the default configuration, which can be inspected as follows:
+```{r, get default configuration}
+my_configuration <- generate_configuration()
+my_configuration$n_iter
+```
+For the purpouse of this tutorial, we run a short chain with 3000 iterations only. We
+also infer no effects of antibiotics for now and modify the output storage such
+that we only store every 5-th parameter value and aggreated patient data only .
+
+```{r, customise configuration using fuction}
+my_configuration <- generate_configuration(n_iter = 3000, store_params = 5, 
+store_statuses = "AGGREGATED", infer_covariate_effects = "NONE")
+```
+
+Alternatively, we can get the default configuration and modify entries individually
+```{r, customise configuration alternative}
+new_configuration <- generate_configuration()
+new_configuration$n_iter <- 300
+```
+
+## Customise priors
+We generate custom priors using `generate_priors()`. This function returns
+the default priors, which can be inspected as follows:
+```{r, get default priors}
+my_priors <- generate_priors()
+my_priors$functions$f_beta
+my_priors$parameters$p_beta
+```
+The default prior for the transmission rate is a Cauchy distribution with
+parameters 0 and 4. Let's change that to a Uniform prior:
+
+```{r, customise priors modifying default}
+my_priors$functions$f_beta <- dunif
+my_priors$parameters$p_beta <- c(0,1)
+```
+Alternatively, we can generate the custom priors with the `generate_priors()` 
+function directly:
+
+```{r, customise priors alternative}
+my_priors <- generate_priors(f_beta = dunif, p_beta = c(0,1) )
+
+```
+
+### Run the MCMC 
+Now, we can run the MCMC using our customised configuration and priors:
+```{r, run mcmc}
+output <- run_mcmc(data = example_dataset, priors = my_priors, 
+configuration = my_configuration)
+```
+
+
 
 # Analysing the output
-Here: do some plots of chains (just show that can use coda)
-Also: do some convergence analysis (just show that can use the diagnostics)
-Also: run posterior predictive checks
+We use the package *coda* to take a look at the results. Because the MCMC augments
+the true colonisation times, we can now estimate, what proportion of the colnised
+patients were admitted already colonised and what proportion acquired the colonisation
+during their stay:
+```{r, analyse output}
+library(coda)
+library(ggplot2)
+print(HPDinterval(as.mcmc(output$statuses)))
+```
 
 
 
 
 
 
-
+# References
 
 
 
