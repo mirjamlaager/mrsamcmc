@@ -67,12 +67,12 @@ example_dataset$antibiotics[4,example_dataset$antibiotics[4,] != 0]
 # Model
 The model implemented in the package *mrsamcmc* very much builds on previous
 methodology as described in @doi:10.1093/biostatistics/kxl017 and @pmid27042253.
-The data augmentation approach implenented in these publications introduces
+The data augmentation approach used in these publications introduces
 additional parameters for the unknown colonisation times for each patient, which
 makes it possible to split the overall likelihood into the following product:
 $$ \Pi(\Omega,t^c| \rho, \varphi, \beta) = \Pi(\Omega|t^c,\rho) \cdot \Pi(t^c | \rho, \beta),  $$
 where $\Omega$ denotes the test results, $t^c$ are the true colonisation times,
-$\rho$ is the test sensitivity, $\phi$ is the probability of a patient being 
+$\rho$ is the test sensitivity, $\varphi$ is the probability of a patient being 
 positive on admission and $\beta$ is the transmission rate. The likelihood
 of the colonisation times given the parameters of the transmission models 
 is given by
@@ -169,7 +169,7 @@ my_priors <- generate_priors(f_beta = dunif, p_beta = c(0,1) )
 
 ```
 
-### Run the MCMC 
+## Run the MCMC 
 Now, we can run the MCMC using our customised configuration and priors:
 ```{r, run mcmc}
 output <- run_mcmc(data = example_dataset, priors = my_priors, 
@@ -188,8 +188,8 @@ library(coda)
 library(ggplot2)
 print(HPDinterval(as.mcmc(output$statuses)))
 ```
-
-
+For further output analysis including posterior predicitive checks and 
+forward simulations, consider the vignette *simulations*.
 
 
 
