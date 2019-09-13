@@ -1,0 +1,64 @@
+---
+title: "Introduction"
+author: "Mirjam Laager"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_vignette:
+    toc: true
+
+vignette: >
+  %\VignetteIndexEntry{Introduction}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+In this tutorial we will be analysing the dataset `patient_data_simulated` to 
+demonstrate the main functionalities of the package *mrsamcmc*. 
+
+
+# Example Dataset
+The dataset `patient_data_simulated` is distributed with this package and contains
+simulated admission and discharge dates, test results and antibiotic use of 
+450 patients over 90 days. Data to be analysed with *mrsamcmc* should be in
+the same format as the example dataset we use here. So let's look at the example
+dataset in more detail. It is a list with four elements: `$patients`
+
+Here: explain the data format
+
+
+```{r}
+library(mrsamcmc)
+example_dataset <- patient_data_simulated
+head(example_dataset$patients)
+```
+
+# Brief overview over the MCMC algorithm
+Here: describe what it does. The likelihood functions and cite the papers.
+
+
+
+# Running the MCMC with customised settings
+Here: show how to generate config and priors
+
+# Analysing the output
+Here: do some plots of chains (just show that can use coda)
+Also: do some convergence analysis (just show that can use the diagnostics)
+Also: run posterior predictive checks
+
+
+
+
+
+
+
+
+
+
+

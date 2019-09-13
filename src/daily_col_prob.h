@@ -1,0 +1,10 @@
+double daily_col_prob(Rcpp::NumericVector,
+                                            Rcpp::NumericVector,
+                                            Rcpp::NumericVector,
+                                            Rcpp::StringVector,
+                                            Rcpp::NumericMatrix,
+                                            double,
+                                            double,
+                                            double,
+                                            int,
+                                            int);

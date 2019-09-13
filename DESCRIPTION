@@ -1,0 +1,31 @@
+Package: mrsamcmc
+Version: 0.1.0
+Title: An Implementation of Data Augmented MCMC for Inference on MRSA 
+    Transmission
+Authors@R: c(person("Mirjam", "Laager",
+                    email = "mirjam.laager@ndm.ox.ac.uk",
+		    role = c("aut","cre")),
+	     person("David", "Eyre",
+	            email = "another.email@email.com",
+		    role = c("aut")))
+Maintainer: Mirjam Laager <mirjam.laager@ndm.ox.ac.uk>
+Description: An Implementation of Data Augmented MCMC. Inferring 
+    transmission parameters and hidden statuses of the patients
+    using data augmented MCMC allowing for time dependent covariates.
+Depends: 
+    R (>= 3.1.0)
+Imports: 
+    coda (>= 0.19-2),
+    ggplot2 (>= 3.1.0),
+    Rcpp
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.1.1
+Suggests: 
+    knitr,
+    rmarkdown,
+    testthat
+VignetteBuilder: knitr
+LinkingTo: 
+    Rcpp
