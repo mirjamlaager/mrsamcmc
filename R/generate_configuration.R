@@ -130,15 +130,15 @@ generate_configuration <- function(n_iter = NULL,
     } else {
       covariate_effects <- c()
       if ("b" %in% infer_covariate_effects){
-        append(covariate_effects, "b")
+        covariate_effects <- append(covariate_effects, "b")
       }
 
       if ("s" %in% infer_covariate_effects){
-        append(covariate_effects, "s")
+        covariate_effects <- append(covariate_effects, "s")
       }
 
       if ("r" %in% infer_covariate_effects){
-        append(covariate_effects, "r")
+        covariate_effects <- append(covariate_effects, "r")
       }
       configuration$infer_covariate_effects <- covariate_effects
     }
