@@ -28,7 +28,7 @@ demonstrate the main functionalities of the package *mrsamcmc*.
 # Example Dataset
 The dataset `patient_data_simulated` is distributed with this package and contains
 simulated admission and discharge dates, test results and antibiotic use of 
-450 patients over 90 days. 
+270 patients over 90 days. 
 ```{r}
 library(mrsamcmc)
 example_dataset <- patient_data_simulated
@@ -46,7 +46,9 @@ head(example_dataset$patients)
 In `$patients` each row corresponds to a patient and the columns are the admission
 and discharge dates of the patient (counted in days from day 1 in the dataset) and
 the day of the first positive test for those patients who were tested positive.
-If a patient was never tested positive, this day is set to 20000.
+If a patient was never tested positive, this day is set to 20000. The dataset also
+contains a column for the types of the patients. This column is ignored in the
+simplest form of the model (run_mcmc()), which does not infer sources of infection.
 
 ## test results
 In `$test_results_positive` and `$test_results_negative` each row corresponds to a 
