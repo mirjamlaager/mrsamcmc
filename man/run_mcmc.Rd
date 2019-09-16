@@ -33,10 +33,10 @@ settings are used. Default settings are described in the documentation of
 \code{generate_configuration()}.}
 }
 \value{
-The is a list of two dataframes. The first dataframe contains the
-chains of the parameter values, with iterations stored as specified in the
-configuratin. The second dataframe contains the chains of the statuses,
-with iterations stored as specified in the configuration.
+The function returns a list of two dataframes. The first dataframe
+contains the chains of the parameter values, with iterations stored as
+specified in the configuration. The second dataframe contains the chains
+of the statuses, with iterations stored as specified in the configuration.
 }
 \description{
 Run data augmented MCMC

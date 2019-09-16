@@ -35,6 +35,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// count_tests_forward_simulations
+NumericVector count_tests_forward_simulations(double rho_1, double rho_2, NumericVector colonisations, NumericMatrix antibiotics, NumericMatrix days_of_tests, int n_patients);
+RcppExport SEXP _mrsamcmc_count_tests_forward_simulations(SEXP rho_1SEXP, SEXP rho_2SEXP, SEXP colonisationsSEXP, SEXP antibioticsSEXP, SEXP days_of_testsSEXP, SEXP n_patientsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type rho_1(rho_1SEXP);
+    Rcpp::traits::input_parameter< double >::type rho_2(rho_2SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type colonisations(colonisationsSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type antibiotics(antibioticsSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type days_of_tests(days_of_testsSEXP);
+    Rcpp::traits::input_parameter< int >::type n_patients(n_patientsSEXP);
+    rcpp_result_gen = Rcpp::wrap(count_tests_forward_simulations(rho_1, rho_2, colonisations, antibiotics, days_of_tests, n_patients));
+    return rcpp_result_gen;
+END_RCPP
+}
 // count_true_positive_tests
 NumericVector count_true_positive_tests(NumericMatrix& test_results_positive, NumericMatrix& antibiotics);
 RcppExport SEXP _mrsamcmc_count_true_positive_tests(SEXP test_results_positiveSEXP, SEXP antibioticsSEXP) {
@@ -222,6 +238,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_mrsamcmc_col_pop", (DL_FUNC) &_mrsamcmc_col_pop, 6},
     {"_mrsamcmc_count_false_negative_tests", (DL_FUNC) &_mrsamcmc_count_false_negative_tests, 4},
+    {"_mrsamcmc_count_tests_forward_simulations", (DL_FUNC) &_mrsamcmc_count_tests_forward_simulations, 6},
     {"_mrsamcmc_count_true_positive_tests", (DL_FUNC) &_mrsamcmc_count_true_positive_tests, 2},
     {"_mrsamcmc_daily_col_prob", (DL_FUNC) &_mrsamcmc_daily_col_prob, 10},
     {"_mrsamcmc_daily_col_prob_precalculated", (DL_FUNC) &_mrsamcmc_daily_col_prob_precalculated, 12},

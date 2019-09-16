@@ -25,10 +25,10 @@
 #' \code{generate_configuration()}. Custom settings can be generated using
 #' \code{generate_configuration()}.
 #
-#' @return The is a list of two dataframes. The first dataframe contains the
-#' chains of the parameter values, with iterations stored as specified in the
-#' configuratin. The second dataframe contains the chains of the statuses,
-#' with iterations stored as specified in the configuration.
+#' @return The function returns a list of two dataframes. The first dataframe
+#' contains the chains of the parameter values, with iterations stored as
+#' specified in the configuration. The second dataframe contains the chains
+#' of the statuses, with iterations stored as specified in the configuration.
 #'
 #'
 #' @examples
