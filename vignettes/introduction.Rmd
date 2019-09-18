@@ -48,7 +48,7 @@ and discharge dates of the patient (counted in days from day 1 in the dataset) a
 the day of the first positive test for those patients who were tested positive.
 If a patient was never tested positive, this day is set to 20000. The dataset also
 contains a column for the types of the patients. This column is ignored in the
-simplest form of the model (run_mcmc()), which does not infer sources of infection.
+simplest form of the model (\code{run_mcmc()}), which does not infer sources of infection.
 
 ## test results
 In `$test_results_positive` and `$test_results_negative` each row corresponds to a 
@@ -61,7 +61,7 @@ In `$antibiotics` each row corresponds to a patient and the entries are the days
 on which antibiotics were administered for that patient. Patient 4 for example
 was admitted on day `r example_dataset$patients[4,]$admission` and
 discharged on day `r example_dataset$patients[4,]$discharge` and was
-was on antibiotics on the following days:
+on antibiotics on the following days:
 ```{r, get antibiotics in example dataset}
 example_dataset$antibiotics[4,example_dataset$antibiotics[4,] != 0]
 ```
@@ -70,13 +70,13 @@ example_dataset$antibiotics[4,example_dataset$antibiotics[4,] != 0]
 The model implemented in the package *mrsamcmc* very much builds on previous
 methodology as described in @doi:10.1093/biostatistics/kxl017 and @pmid27042253.
 The data augmentation approach used in these publications introduces
-additional parameters for the unknown colonisation times for each patient, which
+additional parameters for the unknown colonisation time for each patient, which
 makes it possible to split the overall likelihood into the following product:
 $$ \Pi(\Omega,t^c| \rho, \varphi, \beta) = \Pi(\Omega|t^c,\rho) \cdot \Pi(t^c | \rho, \beta),  $$
 where $\Omega$ denotes the test results, $t^c$ are the true colonisation times,
 $\rho$ is the test sensitivity, $\varphi$ is the probability of a patient being 
 positive on admission and $\beta$ is the transmission rate. The likelihood
-of the colonisation times given the parameters of the transmission models 
+of the colonisation times given the parameters of the transmission model
 is given by
 $$ \Pi(t^c | \rho, \beta, b, s , \Sigma) = \varphi^{N_p} (1- \varphi)^{N - N_p} 
 \prod_{i: t_i^c = \infty}\left[ \prod_{j=t_i^a}^{t_i^d}(1 - p_{ij}) \right]
@@ -171,7 +171,7 @@ my_priors <- generate_priors(f_beta = dunif, p_beta = c(0,1) )
 
 ```
 
-## Run the MCMC 
+## Run the MCMC
 Now, we can run the MCMC using our customised configuration and priors:
 ```{r, run mcmc}
 output <- run_mcmc(data = example_dataset, priors = my_priors, 
