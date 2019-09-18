@@ -187,6 +187,28 @@ get_ap <- function(admissions, colonisations, discharges, first_positive_test, s
     .Call(`_mrsamcmc_get_ap`, admissions, colonisations, discharges, first_positive_test, statuses, nPatients)
 }
 
+#' Get vector of patients eligible for colonisation removal
+#'
+#' This function returns a vector of patients who are eligible for removal
+#' of colonisation. These are all patients who were never tested positive and
+#' who are not the only possible source of infection for another patient.
+#'
+#'
+#' @param status a vector. the statuses on discharge of the patients.
+#'
+#' @param first_positive_test a vector with the days of the first positive
+#' test of the patients.
+#'
+#' @param source a vector. the sources of the patients.
+#'
+#' @param nPatients the total number of patients.
+NULL
+
+#' @export
+get_ap_with_types <- function(status, first_positive_test, source, nPatients) {
+    .Call(`_mrsamcmc_get_ap_with_types`, status, first_positive_test, source, nPatients)
+}
+
 #' Log likelihood of importation
 #'
 #' This function calculates the importation component of the overall log
@@ -253,6 +275,56 @@ log_lik_overall <- function(admissions, discharges, colonisations, statuses, TP_
     .Call(`_mrsamcmc_log_lik_overall`, admissions, discharges, colonisations, statuses, TP_no_abx, TP_abx, test_results_negative, antibiotics, beta, b, s, rho_1, rho_2, nPatient, phi, pt)
 }
 
+#' Overall log likelihood for one patient
+#'
+#' This function calculates the summand of the overall log likelihood that
+#' changes when the status of one patient is updated. The constant summands
+#' are ignored for efficiency.
+#'
+#'
+#' @param admissions a vector with days of admission of the patients.
+#'
+#' @param discharges a vector with days of discharge of the patients.
+#'
+#' @param colonisations a vector with days of colonisation of the patients.
+#'
+#' @param sources a vector with the sources of the patients.
+#'
+#' @param statuses a vector the statuses on discharge of the patients
+#'
+#' @param TP_no_abx the number of true positive tests without antibiotics.
+#'
+#' @param TP_abx the number of true positive tests with antibiotics.
+#'
+#' @param test_results_negative a matrix where each row corresponds to a
+#' patient and the entries correspond to a day with a negative test result.
+#'
+#' @param antibiotics a matrix where each row corresponds to a patient
+#' and the entries correspond to a day when antibiotics were administered.
+#'
+#' @param beta the transmission rate.
+#'
+#' @param b the multiplicative effect of antibiotics on transmissibility.
+#'
+#' @param s the multiplicative effect of antibiotics on susceptibility.
+#'
+#' @param rho_1 the test sensitivity without antibiotics (baseline).
+#'
+#' @param rho_2 the test sensitivity with antibiotics.
+#'
+#' @param nPatients the total number of patients.
+#'
+#' @param nTypes the number of types of colonisation.
+#'
+#' @param phi the probability of a patient beeing colonised on admission.
+#'
+#' @param pt the patient for which the overall log likelihood is computed.
+#'
+#' @export
+log_lik_overall_with_types <- function(admissions, discharges, colonisations, sources, statuses, TP_no_abx, TP_abx, test_results_negative, antibiotics, beta, b, s, rho_1, rho_2, nPatients, nTypes, phi, pt) {
+    .Call(`_mrsamcmc_log_lik_overall_with_types`, admissions, discharges, colonisations, sources, statuses, TP_no_abx, TP_abx, test_results_negative, antibiotics, beta, b, s, rho_1, rho_2, nPatients, nTypes, phi, pt)
+}
+
 #' Log likelihood of test sensitivity
 #'
 #' This function calculates the test sensitivity component of the overall log
@@ -280,6 +352,34 @@ log_lik_overall <- function(admissions, discharges, colonisations, statuses, TP_
 #' @export
 log_lik_rho <- function(colonisations, statuses, TP_no_abx, TP_abx, test_results_negative, antibiotics, rho_1, rho_2) {
     .Call(`_mrsamcmc_log_lik_rho`, colonisations, statuses, TP_no_abx, TP_abx, test_results_negative, antibiotics, rho_1, rho_2)
+}
+
+#' Log likelihood of sources
+#'
+#' This function calculates the source component of the overall log likelihood.
+#'
+#' @param nPatients the total number of patients.
+#'
+#' @param nTypes the number of differnt types of colonisations.
+#'
+#' @param admission a vector with days of admission of the patients.
+#'
+#' @param colonisation a vector with days of colonisation of the patients.
+#'
+#' @param source a vector with the sources of the patients.
+#'
+#' @param discharge a vector with days of discharge of the patients.
+#'
+#' @param status a vector with the statuses on discharge of the patients.
+#'
+#' @param antibiotics a matrix where each row corresponds to a patient
+#' and the entries correspond to a day when antibiotics were administered.
+#'
+#' @param b the multiplicative effect of antibiotics on transmissibility.
+#'
+#' @export
+log_lik_sources <- function(nPatients, nTypes, admission, colonisation, source, discharge, status, antibiotics, b) {
+    .Call(`_mrsamcmc_log_lik_sources`, nPatients, nTypes, admission, colonisation, source, discharge, status, antibiotics, b)
 }
 
 #' Log likelihood of transmission
@@ -372,5 +472,23 @@ log_lik_transmission_patient_subset <- function(admissions, colonisations, disch
 #' @export
 onward_check <- function(pt, admissions, colonisations, discharges, first_positive_test, statuses, nPatients) {
     .Call(`_mrsamcmc_onward_check`, pt, admissions, colonisations, discharges, first_positive_test, statuses, nPatients)
+}
+
+#' Get first onward transmission of a patient
+#'
+#' This function returns the first onward transmission for a given patient.
+#'
+#'
+#' @param pt an integer. the patient for which the first onward transmission
+#' is returned.
+#'
+#' @param source a vector. the sources of the patients.
+#'
+#' @param colonisation a vector with days of colonisation of the patients.
+#'
+#' @param n_patients the total number of patients.
+#' @export
+update_onward_transmission <- function(pt, source, colonisation, n_patients) {
+    .Call(`_mrsamcmc_update_onward_transmission`, pt, source, colonisation, n_patients)
 }
 

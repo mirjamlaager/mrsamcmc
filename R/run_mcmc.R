@@ -700,11 +700,8 @@ run_mcmc <- function(data = NULL, priors = NULL, configuration = NULL){
 
 
           # define window when patient could have aquired. The last possible day
-          # of colonisation is the minimum of the discharge and first positive test.
-          # To improve mixing, onward transmissions could also be accounted for
-          # when defining the window of acquisition. However, it is not obvious,
-          # which is faster: rejecting impossible moves (as is now),
-          # or checking for onward transmissions.
+          # of colonisation is discharge, since we assume perfect specificity and
+          # never remove colonisations from patients who were tested positive.
           first_possible_acquisition_day <- patients[pt, ]$admission
           last_possible_acquisition_day <- patients[pt, ]$discharge
           dt <- last_possible_acquisition_day - first_possible_acquisition_day + 1
