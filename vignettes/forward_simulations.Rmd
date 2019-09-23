@@ -27,3 +27,168 @@ the resulting numbers of positive tests in the simulations to the data we used f
 the inference. We will also use the function `run_forward_simulations()` to simulate
 different interventions and compare the resulting numbers of positive tests to the
 baseline scenario without interventions.
+
+
+# Posterior Predicitive Checks
+For the purpouse of this tutorial, we run a short chain with 3000 iterations only.
+```{r, run mcmc}
+library(mrsamcmc)
+example_dataset <- patient_data_simulated
+mcmc_chains <- run_mcmc(data = example_dataset,
+                        configuration = generate_configuration(n_iter = 3000))
+
+```
+We now use the parameter values infered with the MCMC to conduct forward simulations.
+In each iteration a patient population with the same admission, discharge and test dates 
+as the original dataset is generated and the forward simulations are run with parameter
+values sampled from the MCMC chains. 
+
+```{r, run ppc}
+ppc <- posterior_predictive_checks(data = example_dataset, 
+                                   chains = mcmc_chains, 
+                                   n_iter = 100,
+                                   seed = 42)
+positive_tests_simulations <- ppc$positive_tests
+positive_tests_data <- length(which(example_dataset$test_results_positive != 0))
+```
+
+The number of positive tests in these simulations can then be compared to the 
+number of positive tests in the dataset that was used for inference. The function
+`posterior_predictive_checks()` also returns the number of negative tests and the
+parameter samples, which could be used for sensitivity analysis.
+
+```{r, plot ppc, fig.width = 7}
+library(ggplot2)
+ggplot(as.data.frame(positive_tests_simulations), aes(x = positive_tests_simulations)) + 
+  geom_histogram(bins = 20) +
+  geom_vline(aes( xintercept = positive_tests_data),
+             color = "red", 
+             linetype = "dashed", 
+             size = 1.5) +
+  xlab("total number of positive tests")
+```
+
+
+# Simulating the Effect of Interventions
+We can also use the infered parameter values to simulate the effect of interventions.
+First, we get the point estimates for all the parameter values from the MCMC chains
+and store them as baseline parameters.
+```{r, get point estimates}
+library(coda)
+d_beta <- density(as.mcmc(mcmc_chains$parameters$beta))
+point_estimate_beta <- d_beta$x[which(d_beta$y == max(d_beta$y))]
+
+d_b <- density(as.mcmc(mcmc_chains$parameters$b))
+point_estimate_b <- d_b$x[which(d_b$y == max(d_b$y))]
+
+d_s <- density(as.mcmc(mcmc_chains$parameters$s))
+point_estimate_s <- d_s$x[which(d_s$y == max(d_s$y))]
+
+d_rho_1 <- density(as.mcmc(mcmc_chains$parameters$rho_1))
+point_estimate_rho_1 <- d_rho_1$x[which(d_rho_1$y == max(d_rho_1$y))]
+
+d_rho_2 <- density(as.mcmc(mcmc_chains$parameters$rho_2))
+point_estimate_rho_2 <- d_rho_2$x[which(d_rho_2$y == max(d_rho_2$y))]
+
+d_phi <- density(as.mcmc(mcmc_chains$parameters$phi))
+point_estimate_phi <- d_phi$x[which(d_phi$y == max(d_phi$y))]
+
+
+params_baseline <- c()
+
+params_baseline$beta <- point_estimate_beta
+params_baseline$b <- point_estimate_b
+params_baseline$s <- point_estimate_s
+params_baseline$rho_1 <- point_estimate_rho_1
+params_baseline$rho_2 <- point_estimate_rho_2
+params_baseline$phi <- point_estimate_phi
+
+n_forward_sims <- 10
+```
+
+
+The function `run_forward_simulations()` generates a patient population with with 
+the same admission, discharge and test dates as the original dataset and runs 
+forward simulations with transmission parameters as specified in the argument
+baseline_parameters:
+```{r, run forward simulations baseline}
+positive_tests_baseline <- run_forward_simulations(data = example_dataset,
+                                                   baseline_parameters = params_baseline,
+                                                   n_iter = n_forward_sims )
+```
+Interventions can be specified in `intervention_parameters`. For now, only very basic
+interventions are implemented, but these can easily be made more flexible.
+
+## reducing transmission
+We model an intervention reducing transmission by a factor of 0.9 and get the number 
+of positive tests in that scenario by specifying the `intervention_parameters` as 
+follows:
+```{r, run forward simulations reduced transmission}
+params_s1 <- c()
+params_s1$modify_transmission <- 0.9
+params_s1$decolonisation <- FALSE
+params_s1$isolation <- FALSE
+
+positive_tests_s1 <- run_forward_simulations(data = example_dataset,
+                                             baseline_parameters = params_baseline,
+                                             intervention_parameters = params_s1,
+                                             n_iter = n_forward_sims )
+```
+
+## decolonisation
+Decolonisation is assumed to be effective on the day after a patient is detected
+with 100% effectiveness and compliance. These assumptions can be easily relaxed
+in a more flexible implementation of the forward simulations. 
+```{r, run forward simulations decolonisation}
+params_s2 <- c()
+params_s2$modify_transmission <- FALSE
+params_s2$decolonisation <- TRUE
+params_s2$isolation <- FALSE
+
+positive_tests_s2 <- run_forward_simulations(data = example_dataset,
+                                             baseline_parameters = params_baseline,
+                                             intervention_parameters = params_s2,
+                                             n_iter = n_forward_sims )
+```
+
+## isolation
+Isolation is assumed to be effective on the day after a patient is detected
+with 100% effectiveness and compliance. These assumptions can be easily relaxed
+in a more flexible implementation of the forward simulations. 
+```{r, run forward simulations isolation}
+params_s3 <- c()
+params_s3$modify_transmission <- FALSE
+params_s3$decolonisation <- FALSE
+params_s3$isolation <- TRUE
+
+positive_tests_s3<- run_forward_simulations(data = example_dataset,
+                                            baseline_parameters = params_baseline,
+                                            intervention_parameters = params_s3,
+                                            n_iter = n_forward_sims )
+```
+
+## Compare scenarios
+We can now use the number of positive test obtained from the different scenarios
+to compare the effectivenss of the different interventions to the baseline scenario.
+```{r, plot interventions, fig.width = 7}
+library(reshape2)
+df <- data.frame(cbind(1:n_forward_sims ,positive_tests_baseline,
+                       positive_tests_s1,
+                       positive_tests_s2,
+                       positive_tests_s3))
+
+
+colnames(df) <- c("iter","baseline","reduce transmission","decolonisation","isolation")
+
+df_melted <- melt(df, id = "iter")
+colnames(df_melted) <- c("iteration","scenario","positive_tests")
+
+ggplot(df_melted, aes(x = scenario, y = positive_tests, fill = scenario)) +
+  geom_boxplot() +
+  ylim(c(0,100)) +
+  theme(axis.text.x=element_blank()) +
+  ylab("number of positive tests") +
+  scale_fill_brewer(palette="GnBu")
+```
+
+
