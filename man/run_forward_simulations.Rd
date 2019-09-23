@@ -4,31 +4,11 @@
 \alias{run_forward_simulations}
 \title{Run forward simulations}
 \usage{
-run_forward_simulations(data, baseline_parameters, intervention_parameters,
-  n_iter, seed = NULL)
+run_forward_simulations(data, baseline_parameters,
+  intervention_parameters = NULL, n_iter, seed = NULL)
 }
 \arguments{
-\item{n_iter}{the number of forward simulations.}
-
-\item{seed}{set a seed for reproducibility of the simulations.}
-
-\item{chains}{a list with the output from \code{run_mcmc()}. The list contains
-two dataframes. The first dataframe contains the chains of the parameter
-values, with iterations stored as specified in the configuration of
-\code{run_mcmc()}. The second dataframe contains the chains of the statuses,
-with iterations stored as specified in the configuration of \code{run_mcmc()}.}
-}
-\value{
-The function returns a list with three elements:
-\describe{
-\item{positive_tests}{the number of positive tests in each simulation.}
-\item{negative_tests}{the number of negative tests in each simulation.}
-\item{parameter_samples}{the random samples from the chains that were
-used for the simulations.}
-}
-}
-\description{
-#' @param data a list containing 4 elements:
+\item{data}{a list containing 4 elements:
 \describe{
   \item{patients}{a dataframe with three columns. Each row
   corresponds to a patient, the columns are admission, first_positive_test
@@ -40,5 +20,41 @@ used for the simulations.}
    Entries correspond to the day of a negative test.}
    \item{antibiotics}{a matrix. Each row corresponds to a patient.
    Entries correspond to the day when an antibiotic was administered.}
+}}
+
+\item{baseline_parameters}{a dataframe with values of all the parameters of the
+transmission model:
+\describe{
+\item{beta}{the transmission rate}
+\item{b}{the effect of antibiotics on transmissibility}
+\item{s}{the effect of antibiotics on susceptibility}
+\item{rho_1}{the test sensitivity in the absence of antibiotics}
+\item{rho_2}{the test sensitivity in the presence of antibiotics}
+\item{phi}{the importation probability}
+}}
+
+\item{intervention_parameters}{a dataframe with the intervention settings:
+\describe{
+\item{modfiy_transmission}{if FALSE (default), transmission is not modified and
+the baseline value of beta is used. If set to a value, the transmission rate
+is the baseline transmission rate multiplied by the value.}
+\item{decolonisation}{if TRUE, detected patients are decolonised.}
+\item{isolation}{if TRUE, detected patients are isolated.}
+}}
+
+\item{n_iter}{the number of forward simulations.}
+
+\item{seed}{set a seed for reproducibility of the simulations.}
 }
+\value{
+The function returns a list with three elements:
+\describe{
+\item{positive_tests}{the number of positive tests in each simulation.}
+\item{negative_tests}{the number of negative tests in each simulation.}
+\item{parameter_samples}{the random samples from the chains that were
+used for the simulations.}
+}
+}
+\description{
+Run forward simulations
 }

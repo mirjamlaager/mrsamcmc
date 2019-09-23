@@ -1,6 +1,6 @@
 #' Run forward simulations
 #'
-#'#' @param data a list containing 4 elements:
+#'@param data a list containing 4 elements:
 #' \describe{
 #'   \item{patients}{a dataframe with three columns. Each row
 #'   corresponds to a patient, the columns are admission, first_positive_test
@@ -14,11 +14,25 @@
 #'    Entries correspond to the day when an antibiotic was administered.}
 #' }
 #'
-#' @param chains a list with the output from \code{run_mcmc()}. The list contains
-#' two dataframes. The first dataframe contains the chains of the parameter
-#' values, with iterations stored as specified in the configuration of
-#' \code{run_mcmc()}. The second dataframe contains the chains of the statuses,
-#' with iterations stored as specified in the configuration of \code{run_mcmc()}.
+#' @param baseline_parameters a dataframe with values of all the parameters of the
+#' transmission model:
+#' \describe{
+#' \item{beta}{the transmission rate}
+#' \item{b}{the effect of antibiotics on transmissibility}
+#' \item{s}{the effect of antibiotics on susceptibility}
+#' \item{rho_1}{the test sensitivity in the absence of antibiotics}
+#' \item{rho_2}{the test sensitivity in the presence of antibiotics}
+#' \item{phi}{the importation probability}
+#' }
+#'
+#' @param intervention_parameters a dataframe with the intervention settings:
+#' \describe{
+#' \item{modfiy_transmission}{if FALSE (default), transmission is not modified and
+#' the baseline value of beta is used. If set to a value, the transmission rate
+#' is the baseline transmission rate multiplied by the value.}
+#' \item{decolonisation}{if TRUE, detected patients are decolonised.}
+#' \item{isolation}{if TRUE, detected patients are isolated.}
+#' }
 #'
 #' @param n_iter the number of forward simulations.
 #'
@@ -40,9 +54,9 @@ run_forward_simulations <- function(data, baseline_parameters, intervention_para
   }
 
   if (is.null(intervention_parameters)){
-    intervention_parameters$modify_transmission = FALSE
-    intervention_parameters$decolonisation = FALSE
-    intervention_parameters$isolation = FALSE
+    intervention_parameters$modify_transmission <- FALSE
+    intervention_parameters$decolonisation <- FALSE
+    intervention_parameters$isolation <- FALSE
   }
 
   # set up patient population
@@ -52,19 +66,12 @@ run_forward_simulations <- function(data, baseline_parameters, intervention_para
 
   # get days when patients were tested
   days_of_tests <- cbind(data$test_results_positive, data$test_results_negative)
-  days_of_tests[which(days_of_tests==0)] <- 20000
+  days_of_tests[which(days_of_tests == 0)] <- 20000
 
   for (row in 1:nrow(days_of_tests)){
-    days_of_tests[row,] <- sort(days_of_tests[row,])
-    days_of_tests[row, days_of_tests[row,]==20000] <- 0
+    days_of_tests[row, ] <- sort(days_of_tests[row, ])
+    days_of_tests[row, days_of_tests[row, ] == 20000] <- 0
   }
-
-
-  #then: generate example: baseline plus three interventions and plot as boxplot -> slide
-  #then: complete documentation of run_forward_simulations
-  #then: add some plots to introduction vingette (traceplot of parameter)
-  #then: write types vignette
-  #then: write forward simulation vignette
 
   # get days when patients were on antibiotics
   days_of_antibiotics <- data$antibiotics
@@ -91,25 +98,26 @@ run_forward_simulations <- function(data, baseline_parameters, intervention_para
     patients$isolation <- 0
 
     # set up imports
-    n_imports <- round(phi*n_patients)
-    imported_patients <- sample(1:n_patients,n_imports)
-    patients[imported_patients,]$colonisation <- patients[imported_patients,]$admission -1
-    patients[imported_patients,]$status <- "p"
+    n_imports <- round(phi * n_patients)
+    imported_patients <- sample(1:n_patients, n_imports)
+    patients[imported_patients, ]$colonisation <- patients[imported_patients, ]$admission - 1
+    patients[imported_patients, ]$status <- "p"
 
 
     # run transmission, testing and interventions
     for (day in 1:n_days){
 
-      pt_in_ward = which(patients$admission <= day & patients$discharge >= day)
+      pt_in_ward <- which(patients$admission <= day & patients$discharge >= day)
 
-      pt_col <- pt_in_ward[patients[pt_in_ward,]$colonisation < day & patients[pt_in_ward,]$isolation == 0]
+      pt_col <- pt_in_ward[patients[pt_in_ward, ]$colonisation < day & patients[pt_in_ward, ]$isolation == 0]
 
       #count patients in ward that are colonised on day and on/off abx
       cp_no_abx <- 0
       cp_abx <- 0
 
       for (pt in pt_col){
-        if (day %in% days_of_antibiotics[pt, ]){cp_abx <- cp_abx + 1
+        if (day %in% days_of_antibiotics[pt, ]){
+          cp_abx <- cp_abx + 1
         } else {
           cp_no_abx <- cp_no_abx + 1
         }
@@ -119,7 +127,7 @@ run_forward_simulations <- function(data, baseline_parameters, intervention_para
 
       for (pt in pt_in_ward) {
         # patient is susceptible: patient can get infected
-        if(patients[pt, ]$status=="s") {
+        if (patients[pt, ]$status == "s") {
 
           #check if patient is on abx
           if (day %in% days_of_antibiotics[pt, ]){
@@ -131,7 +139,7 @@ run_forward_simulations <- function(data, baseline_parameters, intervention_para
           pi_ij <- Sabx * (beta * cp_no_abx + b * beta * cp_abx)
           p_ij <- 1 - exp(-pi_ij)
 
-          if(runif(1) < p_ij) {
+          if (runif(1) < p_ij) {
             patients[pt, ]$colonisation <- day
             patients[pt, ]$status <- "a"
           }
@@ -146,7 +154,7 @@ run_forward_simulations <- function(data, baseline_parameters, intervention_para
       for (pt in pt_in_ward){
 
 
-        if (day %in% days_of_tests[pt,]){
+        if (day %in% days_of_tests[pt, ]){
           #check if patient is positive
           if (patients[pt, ]$colonisation <= day){
 
@@ -177,15 +185,15 @@ run_forward_simulations <- function(data, baseline_parameters, intervention_para
       # decolonisation
       if (intervention_parameters$decolonisation == TRUE){
         for (pt in pt_in_ward_with_positive_test){
-          patients[pt,]$status <- "s"
-          patients[pt,]$colonisation <- 20000
+          patients[pt, ]$status <- "s"
+          patients[pt, ]$colonisation <- 20000
         }
       }
 
       # isolation
       if (intervention_parameters$isolation == TRUE){
         for (pt in pt_in_ward_with_positive_test){
-          patients[pt,]$isolation <- 1
+          patients[pt, ]$isolation <- 1
         }
       }
 

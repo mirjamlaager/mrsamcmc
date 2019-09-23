@@ -44,17 +44,21 @@ dataset in more detail. It is a list with four elements: `$patients`,
 head(example_dataset$patients)
 ```
 In `$patients` each row corresponds to a patient and the columns are the admission
-and discharge dates of the patient (counted in days from day 1 in the dataset) and
-the day of the first positive test for those patients who were tested positive.
-If a patient was never tested positive, this day is set to 20000. The dataset also
+and discharge dates of the patient (in days) and the day of the first positive test 
+for those patients who were tested positive. If a patient was never tested positive, 
+their day of first positive test is set to 20000. The dataset also
 contains a column for the types of the patients. This column is ignored in the
-simplest form of the model (\code{run_mcmc()}), which does not infer sources of infection.
+simplest form of the model `run_mcmc()`, which does not infer sources of infection.
 
 ## test results
 In `$test_results_positive` and `$test_results_negative` each row corresponds to a 
 patient and the entries are the day of a positive or negative test for that patient.
-In the example dataset, there is a total of `r length(which(example_dataset$test_results_positive != 0))`
-positive and a total of `r length(which(example_dataset$test_results_negative != 0))` negative tests.
+We can get the total number of positive and negative tests in the example 
+dataset as follows:
+```{r, get positive and negative tests in example dataset}
+length(which(example_dataset$test_results_positive != 0))
+length(which(example_dataset$test_results_negative != 0))
+```
 
 ## antibiotics
 In `$antibiotics` each row corresponds to a patient and the entries are the days 
@@ -85,9 +89,11 @@ where $N$ is the total number of patients, $N_p$ is the number of patients who
 are colonised on admission, $t_i^c$ denotes the day of acquisition of patient $i$ 
 and is set to infinity if the patient stays susceptible, $t_i^a$ and $t_i^d$
 denote the day of admission and discharge of patient $i$ and $p_{ij}$ is the probability
-of patient $i$ becoming colonised on day $j$ which is defined below. Inference is 
+of patient $i$ becoming colonised on day $j$ which is defined below. The parameters 
+$b$ and $s$ and the matrix $\Sigma$ are introduced to account for the effect of
+antibiotics and are discussed in more detail below. Inference is 
 conducted via MCMC, where each step consists of updating the parameters of the transmission 
-rates using the current colonisation times and then updating the colonisation 
+model using the current colonisation times and then updating the colonisation 
 times of a subset of the patients.
 
 
@@ -106,8 +112,8 @@ was on ($_{abx}$) or off ($_{nabx}$) antibiotics. The function `run_mcmc()` can
 be configured such that the effect is set to 1 and a baseline test sensitivity only is inferred.
 
 ## Accounting for the effect of antibiotics
-We also introduce an effect of antibiotics on transmissibility and susceptibility
-and denote the probability of patient i becoming colonised on day j as:
+We also introduce a multiplicative effect of antibiotics on transmissibility and 
+susceptibility and denote the probability of patient i becoming colonised on day j as:
 $$p_{ij} = 1 - \exp(-s^{1_{\sigma_{ij}=1}}(\beta C_1(j) + b \beta C_2(j))) $$
 where $s$ denotes the effect of antibiotics on test sensitivity, $b$ denotes
 the effect of antibiotcs on transmissibility, $C_1(j)$ is the total number of
@@ -119,7 +125,7 @@ and transmissibility are set to 1 and a baseline transmission
 rate only is inferred.
 
 
-# Running the MCMC with customised settings
+# Inference with customised settings
 In this section we will run the MCMC algorithm with the example dataset and
 show how to customise the settings of the MCMC and use custom prior distributions.
 The function `run_mcmc()` has three arguments, `data`, `priors` and `configuration`.
@@ -135,10 +141,10 @@ my_configuration$n_iter
 ```
 For the purpouse of this tutorial, we run a short chain with 3000 iterations only. We
 also infer no effects of antibiotics for now and modify the output storage such
-that we only store every 5-th parameter value and aggreated patient data only .
+that we only store aggreated patient data only .
 
 ```{r, customise configuration using fuction}
-my_configuration <- generate_configuration(n_iter = 3000, store_params = 5, 
+my_configuration <- generate_configuration(n_iter = 3000, store_params = "STORE_ALL", 
 store_statuses = "AGGREGATED", infer_covariate_effects = "NONE")
 ```
 
@@ -147,6 +153,7 @@ Alternatively, we can get the default configuration and modify entries individua
 new_configuration <- generate_configuration()
 new_configuration$n_iter <- 300
 ```
+
 
 ## Customise priors
 We generate custom priors using `generate_priors()`. This function returns
@@ -171,7 +178,7 @@ my_priors <- generate_priors(f_beta = dunif, p_beta = c(0,1) )
 
 ```
 
-## Run the MCMC
+## Run MCMC
 Now, we can run the MCMC using our customised configuration and priors:
 ```{r, run mcmc}
 output <- run_mcmc(data = example_dataset, priors = my_priors, 
@@ -190,14 +197,18 @@ library(coda)
 library(ggplot2)
 print(HPDinterval(as.mcmc(output$statuses)))
 ```
+We can also plot the chains and densities of individual parameters:
+```{r, plot output, fig.width = 7}
+full_chain_beta <- output$parameters$beta
+chain_without_burnin_beta <- full_chain_beta[-(1:my_configuration$n_burnin)]
+plot(as.mcmc(chain_without_burnin_beta))
+```
+
 For further output analysis including posterior predicitive checks and 
 forward simulations, consider the vignette *simulations*.
 
 
-
-
 # References
-
 
 
 
