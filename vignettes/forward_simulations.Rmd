@@ -1,0 +1,29 @@
+---
+title: "Forward Simulations"
+author: "Mirjam Laager"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_vignette:
+    toc: true
+
+vignette: >
+  %\VignetteIndexEntry{Introduction}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  
+bibliography: bibliography.bib
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+In this tutorial we will use the function `posterior_predictive_checks()` to 
+run forward simulations based on the infered transmission parameters and compare
+the resulting numbers of positive tests in the simulations to the data we used for
+the inference. We will also use the function `run_forward_simulations()` to simulate
+different interventions and compare the resulting numbers of positive tests to the
+baseline scenario without interventions.
