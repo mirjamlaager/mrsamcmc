@@ -44,46 +44,76 @@ head(example_dataset$patients)
 
 The model implemented in the function `run_mcmc_with_types()` is the same model
 as the one in `run_mcmc()`, described in more detail in the *introduction*. However,
-as now each patient has a type, we can write out an additional component of the overall
-likelilhood.
-
-
-write likelihood here
-
+as now each patient has a type $\tau_j$ and a source $q_j$, we can write out an 
+additional component of the overall likelihood:
+$$ \Pi(q| t^c,\varphi, \rho, b, Z,\Sigma) = \prod_{i:t_i^c \neq \infty} \frac{b^{1_{\sigma_{t_j^cq_j=1}}}}{C_1(t_j^c) + b C_2(t_j^c)}$$
 
 # Inference
-
-here: run mcmc with types
+```{r, run mcmc}
+mcmc_chains <- run_mcmc_with_types(data = example_dataset, 
+                                   configuration = generate_configuration(n_iter = 3000))
+```
 
 
 # Analyse the output
 
 ## Sources and time of infection of individual patients
+We can look at likely infection times and sources of one patient as follows:
+```{r, inspect patient}
+patient <- 248
+table(mcmc_chains$sources[ ,patient])
+table(mcmc_chains$statuses[ ,patient])
+```
+
+
 
 ## Transmission network
+We can also plot the full transmission network, where each node corresponds to
+a colonised patient and the width of the edges corresponds to the proportion of
+simulation runs with a transmission between the two patients connected by an edge.
+```{r, plot graph, fig.width= 7, fig.height = 8}
+library(igraph)
+all_patients <- seq(1,270)
+types <- cbind(all_patients, example_dataset$patients$type)
+types <- data.frame(types)
+colnames(types) <- c("all_patients","type")
+types[types$type == -1,]$type <- 5
+admatrix <- matrix(0, nrow = 271, ncol = 271)
 
+for (k in 1:270){
+  for (j in 0:270){
+    admatrix[j+1,k+1] <- length(which(mcmc_chains$sources[ ,k] == j))
+  }
+}
+colnames(admatrix) <- seq(0,270)
+admatrix <- admatrix/3000
+graph_weighted <- graph_from_adjacency_matrix(admatrix, 
+                                              mode = "directed", 
+                                              weighted = TRUE)
 
+V(graph_weighted)$type = as.character(types$type[match(V(graph_weighted)$name, types$all_patients)])
 
+graph_weighted <- (delete.vertices(simplify(graph_weighted), 
+                   degree(graph_weighted) == 0))
 
+graph_weighted <- delete.edges(graph_weighted, 
+                   which(E(graph_weighted)$weight < 0.1))
 
+graph_weighted <- (delete.vertices(simplify(graph_weighted), 
+                                   degree(graph_weighted)==0))
 
+E <- t(apply(get.edgelist(graph_weighted), 1, sort))
 
+E(graph_weighted)$curved <- 0
+E(graph_weighted)[duplicated(E) | duplicated(E,fromLast =TRUE)]$curved <- 1
 
+V(graph_weighted)$color = V(graph_weighted)$type
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+plot(graph_weighted,
+     vertex.size = 10, vertex.label.cex = 0.8,
+     edge.width = 5 * E(graph_weighted)$weight,
+     edge.arrow.size = 0.1,
+     main = "infered transmission network")
+```
 
 
