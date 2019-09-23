@@ -1,0 +1,89 @@
+---
+title: "Infer Sources"
+author: "Mirjam Laager"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_vignette:
+    toc: true
+
+vignette: >
+  %\VignetteIndexEntry{Introduction}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  
+bibliography: bibliography.bib
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+In this tutorial we will analyse the the dataset `patient_data_simulated` with
+the function `run_mcmc_with_types()`, to demonstrate how discrete typing information
+can be used to infer sources of infection.
+
+# Example Dataset
+The dataset `patient_data_simulated` is distributed with this package and contains
+simulated admission and discharge dates, test results and antibiotic use of 
+270 patients over 90 days. For a more detailed description of the example dataset
+consider the vignette *introduction*. In this example we assume that each patient
+who was tested positive gets assigned one of four types. We use these types to
+infer likely sources of infection.
+
+```{r, look at example dataset}
+library(mrsamcmc)
+example_dataset <- patient_data_simulated
+head(example_dataset$patients)
+```
+
+
+# Model
+
+The model implemented in the function `run_mcmc_with_types()` is the same model
+as the one in `run_mcmc()`, described in more detail in the *introduction*. However,
+as now each patient has a type, we can write out an additional component of the overall
+likelilhood.
+
+
+write likelihood here
+
+
+# Inference
+
+here: run mcmc with types
+
+
+# Analyse the output
+
+## Sources and time of infection of individual patients
+
+## Transmission network
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
