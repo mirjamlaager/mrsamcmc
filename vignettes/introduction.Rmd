@@ -82,7 +82,7 @@ $\rho$ is the test sensitivity, $\varphi$ is the probability of a patient being
 positive on admission and $\beta$ is the transmission rate. The likelihood
 of the colonisation times given the parameters of the transmission model
 is given by
-$$ \Pi(t^c | \rho, \beta, b, s , \Sigma) = \varphi^{N_p} (1- \varphi)^{N - N_p} 
+$$ \Pi(t^c | \beta, b, s , \Sigma) = \varphi^{N_p} (1- \varphi)^{N - N_p} 
 \prod_{i: t_i^c = \infty}\left[ \prod_{j=t_i^a}^{t_i^d}(1 - p_{ij}) \right]
 \prod_{i: t_i^c \neq \infty}\left[p_{it_i^c} \prod_{j=t_i^a}^{t_i^c -1}(1 - p_{ij}) \right]$$
 where $N$ is the total number of patients, $N_p$ is the number of patients who
@@ -197,7 +197,10 @@ library(coda)
 library(ggplot2)
 print(HPDinterval(as.mcmc(output$statuses)))
 ```
-We can also plot the chains and densities of individual parameters:
+We can also plot the chains and densities of individual parameters. Since we only ran
+a small number of iterations for the purpose of this tutorial, the chain clearly has not
+yet converged. Consider running more iterations (for example 30'000) and running multiple
+chains for better results.
 ```{r, plot output, fig.width = 7}
 full_chain_beta <- output$parameters$beta
 chain_without_burnin_beta <- full_chain_beta[-(1:my_configuration$n_burnin)]
