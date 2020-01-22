@@ -76,53 +76,38 @@ methodology as described in @doi:10.1093/biostatistics/kxl017 and @pmid27042253.
 The data augmentation approach used in these publications introduces
 additional parameters for the unknown colonisation time for each patient, which
 makes it possible to split the overall likelihood into the following product:
-$$ \Pi(\Omega,t^c| \rho, \varphi, \beta) = \Pi(\Omega|t^c,\rho) \cdot \Pi(t^c | \rho, \beta),  $$
-where $\Omega$ denotes the test results, $t^c$ are the true colonisation times,
-$\rho$ is the test sensitivity, $\varphi$ is the probability of a patient being 
-positive on admission and $\beta$ is the transmission rate. The likelihood
-of the colonisation times given the parameters of the transmission model
-is given by
-$$ \Pi(t^c | \beta, b, s , \Sigma) = \varphi^{N_p} (1- \varphi)^{N - N_p} 
-\prod_{i: t_i^c = \infty}\left[ \prod_{j=t_i^a}^{t_i^d}(1 - p_{ij}) \right]
-\prod_{i: t_i^c \neq \infty}\left[p_{it_i^c} \prod_{j=t_i^a}^{t_i^c -1}(1 - p_{ij}) \right]$$
-where $N$ is the total number of patients, $N_p$ is the number of patients who
-are colonised on admission, $t_i^c$ denotes the day of acquisition of patient $i$ 
-and is set to infinity if the patient stays susceptible, $t_i^a$ and $t_i^d$
-denote the day of admission and discharge of patient $i$ and $p_{ij}$ is the probability
-of patient $i$ becoming colonised on day $j$ which is defined below. The parameters 
-$b$ and $s$ and the matrix $\Sigma$ are introduced to account for the effect of
-antibiotics and are discussed in more detail below. Inference is 
-conducted via MCMC, where each step consists of updating the parameters of the transmission 
-model using the current colonisation times and then updating the colonisation 
-times of a subset of the patients.
+$$ \Pi(\Omega, W| \rho, \varphi, \beta) = \Pi(\Omega|W,\rho) \cdot \Pi(W | \rho, \beta),  $$
+where $\Omega$ denotes the test results, W is the colonisation status of the patients and colonisation times, $\rho$ is the test sensitivity, $\varphi$ is the probability of a patient being 
+positive on admission and $\beta$ is a transmission parameter. The first factor of the product describes the observation process, which can be modelled as a binomial distribution. Assuming perfect specificity, the likelihood of the test results given the test sensitivity and the true statuses is therefore given by  
+
+$$ \Pi\left(\Omega\middle|W,\rho\right)=\rho^{TP}\cdot\left(1-\rho\right)^{FN} $$
+
+where TP and FN denote the number of true positive and false negative tests. The second factor of the overall likelihood captures the transmission process. Following  @pmid27042253 we assume that patients who acquire a colonisation stay colonised until discharge. The patient statuses, W, are therefore fully described by the colonisation times, $t^c$, which are set to infinity for patients who do not get colonised during their ward stay. By discretising time into days, the likelihood of the colonisation times given the transmission parameters can be modelled as
+
+$$ \Pi\left(t^c\middle|\varphi,\beta\right)=\varphi^{N_p}\left(1-\varphi\right)^{N-N_p}\prod_{k:t_k^c=\infty}\left[\prod_{j=t_k^a}^{t_k^d}\left(1-p_{kj}\right)\right]\prod_{k:t_k^c\neq\infty}\left[p_{kt_k^c}\prod_{j=t_k^a}^{t_k^c-1}\left(1-p_{kj}\right)\right] $$
 
 
-## Accounting for imperfect testing
-As in @doi:10.1093/biostatistics/kxl017 and @pmid27042253 we account for imperfect
-test sensitivity, and model the likelihood of the test results given the
-test sensitivity as a binomial distribution. In addition, we allow for a multiplicative
-effect of antibiotics on test sensitivity. The likelihood of the test results given
-the true colonisation times and the test sensitivity is given by
-$$ \Pi(\Omega | t^c, \rho, r, \Sigma) = \rho^{TP_{nabx}} \cdot (1 - \rho)^{FN_{nabx}}
-\cdot (r\rho)^{TP_{abx}} \cdot (1 - r \rho)^{FN_{abx}} $$
+where $N$ is the total number of patients, $N_p$ is the number of patients who are admitted already colonised and $t_k^a$, $t_k^c$ and $t_k^d$ denote the day of admission, colonisation and discharge of patient $k$. $p_{kj}$ is the probability of patient $k$ becoming colonised on day $j$ which is given by
 
-Where $TP_{nabx}$, $FN_{nabx}$, $TP_{abx}$ and $FN_{abx}$ denote the total number
-of true positive ($TP$) and false negative ($FN$) tests conducted while a patient
-was on ($_{abx}$) or off ($_{nabx}$) antibiotics. The function `run_mcmc()` can 
-be configured such that the effect is set to 1 and a baseline test sensitivity only is inferred.
+$$ p_{kj}= 1 - \exp(- \beta C(j)) $$
+
+where $C(j)$ is the number of colonised patients on day $j$.
+
+
+
 
 ## Accounting for the effect of antibiotics
-We also introduce a multiplicative effect of antibiotics on transmissibility and 
-susceptibility and denote the probability of patient i becoming colonised on day j as:
-$$p_{ij} = 1 - \exp(-s^{1_{\sigma_{ij}=1}}(\beta C_1(j) + b \beta C_2(j))) $$
-where $s$ denotes the effect of antibiotics on test sensitivity, $b$ denotes
-the effect of antibiotcs on transmissibility, $C_1(j)$ is the total number of
-colonised patients on day $j$ who are not on antibioitcs, $C_2(j)$ is the
-total number of colonised patients on day $j$ who are on antibiotics and 
-$\sigma_{ij}$ is 1 if patient $i$ is on antibiotics on day $j$ and 0 otherwise. 
-The function `run_mcmc()` can be configured such that the effects on susceptibility
-and transmissibility are set to 1 and a baseline transmission
-rate only is inferred.
+
+We expand this model to account for the effect of antibiotics on detection and transmission. 
+We assume that antibiotics can affect the test sensitivity, the probability of acquisition and the probability of onward transmission. To capture the effect of antibiotics on test sensitivity we assume that in the presence of antibiotics the baseline test sensitivity changes by a factor \delta and therefore model the likelihood of the test results as
+
+$$ \Pi\left(\Omega\middle|W,\rho,\delta,\Sigma\right)=\rho^{TP_{nabx}}\cdot\left(1-\rho\right)^{FN_{nabx}}\cdot\left(\delta\rho\right)^{TP_{abx}}\cdot\left(1-\delta\rho\right)^{FN_{abx}} $$
+
+where $TP_{nabx}$, ${FN}_{nabx}$, $TP_{abx}$ and ${FN}_{abx}$ denote the total number of true positive and false negative tests conducted while a patient was on or off antibiotics and $\Sigma$ is a matrix with entries $\sigma_{ij}$ equal to one if patient i is on antibiotics on day j and zero otherwise. We model the effect of antibiotics on the transmission dynamics by introducing a parameter $\alpha$ for the effect on acquisition and a parameter $\tau$ for the effect on onward transmission and modify the daily probability of acquisition as follows
+
+$$ p_{kj}=1-\ exp(\ -\ \alpha^{1_{\sigma_{kj}=1}}(\beta C_{nabx}\left(j\right)+\tau\beta C_{abx}\left(j\right))) $$
+
+where $C_{nabx}(j)$ and $C_{abx}(j)$ denote the number of colonised patients on day j who are on or off antibiotics and $1_{\sigma_{kj}=1}$ is an indicator function which equals to 1 if patient $k$ is on antibiotics on day $j$ and zero otherwise. 
 
 
 # Inference with customised settings

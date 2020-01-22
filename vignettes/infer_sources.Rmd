@@ -41,12 +41,30 @@ head(example_dataset$patients)
 
 
 # Model
+To extend the model implemented in the function `run_mcmc_with_types()`
+to account for discrete typing data we use a simplified version of the model by @pmid27042253. If the testing contains some additional information on the type of infection this information can be used to determine likely sources of infection and therefore potentially increase the overall precision of the estimates. The dataset we are using does not contain typing or sequencing data, however, resistance profiles can be used as a proxy for the type of strain. We denote by $Z$ the augmented source patients for all transmission events and factorise the overall likelihood as follows
 
-The model implemented in the function `run_mcmc_with_types()` is the same model
-as the one in `run_mcmc()`, described in more detail in the *introduction*. However,
-as now each patient has a type $\tau_j$ and a source $q_j$, we can write out an 
-additional component of the overall likelihood:
-$$ \Pi(q| t^c,\varphi, \rho, b, Z,\Sigma) = \prod_{i:t_i^c \neq \infty} \frac{b^{1_{\sigma_{t_j^cq_j=1}}}}{C_1(t_j^c) + b C_2(t_j^c)}$$
+$$ \Pi\left(\Omega,\ \Sigma,\ T,\ D,\ W,Z\middle|\theta\right)=\Pi\left(T\middle|W,\ Z,\theta\ \right)\cdot\Pi\left(Z\middle|W,\ \theta\right)\cdot\Pi\left(W\middle|\theta\right) $$
+
+with $T$ denoting the MRSA type causing colonisation. $D$ is a matrix of distances between the different types. In the simplest case we can assume that there is no transmission between different types and set the likelihood contribution of all patients who acquire to 1 if the augmented type of the patient is the same as the type as the source and to 0 otherwise. For patients who are imported and do not have a positive test, a type has to be augmented. We assume that the probability of being colonised with any given type is equal to the proportion of patients who were tested positive and found to have that type. We therefore model the likelihood of the observed types given the augmented sources and colonisation times as
+
+$$ \Pi\left(T\middle|W,\ Z,\theta\ \right)=\ \prod_{k:t_k^c=\infty,\ {\ t}_k^c\ \geq\ t_k^a}\left[1_{T_k=T_{Z_k}}\right]\ \prod_{k:\ {\ t}_k^c\ <\ t_k^a}\frac{N_{T_k}}{N_T} $$
+
+where $N_{T_k}$ is the number of patients who were tested positive with type $T_k$ and $N_T$ is the total number of patients tested positive with any type. Since our model allows for an effect of antibiotics on onward transmission, patients who are on antibiotics on a given day are not equally likely to act as sources of infection as patients who are not on antibiotics. In the absence of effects of antibiotics, the likelihood of any given patient being the source of infection to a patient who acquires infection on a given day is equal to one over the number of colonised patients on that day. In that case the likelihood of the sources given the colonisation times would be given by
+ 
+$$ \Pi\left(Z\middle|S,\ \theta\ \right)=\prod_{k\ =\ 1}^{N}{\left[\prod_{i\ =\ 1}^{N_{c,k}}\frac{1}{C\left(t_i^c\right)}\right]\ \ \ \ \ }$$
+
+
+where $C\left(t_i^c\right)$ is the number of colonised patients on the day when patient i becomes colonised. To account for the effect of antibiotics on transmission we modify this as follows 
+
+$$\Pi\left(Z\middle|S,\ \theta\ \right)=\prod_{k\ =\ 1}^{N}{\left[\prod_{i\ =\ 1}^{N_{c,k}}\frac{b^{l_{ik}}}{C_{nabx}\left(t_i^c\right)+bC_{abx}\left(t_i^c\right)}\right]\ \ \ \ \ }$$
+
+with 
+$$ l_{ik}= \left\{ \begin{array}{cc} 1 & \mbox{ if } σ_{t_i^c,Z_{k,i}} =1\\
+0 & \mbox{else} \end{array}    \right.$$
+
+The approach we present here can also be used for discrete typing schemes such as multi-locus sequence typing (MLST). It can also be easily adapted to more continuous measures of distance, such as spa typing, by deriving a likelihood function which is based on the distance between the type of the offspring and the type of the proposed source.
+
 
 # Inference
 ```{r, run mcmc}
