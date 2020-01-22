@@ -1,9 +1,12 @@
 double log_lik_sources(int,
-                       int,
                        Rcpp::NumericVector,
                        Rcpp::NumericVector,
                        Rcpp::NumericVector,
                        Rcpp::NumericVector,
                        Rcpp::StringVector,
+                       Rcpp::NumericVector,
+                       Rcpp::NumericVector,
+                       Rcpp::NumericVector,
+                       int,
                        Rcpp::NumericMatrix,
                        double);

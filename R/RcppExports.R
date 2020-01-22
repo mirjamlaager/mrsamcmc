@@ -321,8 +321,8 @@ log_lik_overall <- function(admissions, discharges, colonisations, statuses, TP_
 #' @param pt the patient for which the overall log likelihood is computed.
 #'
 #' @export
-log_lik_overall_with_types <- function(admissions, discharges, colonisations, sources, statuses, TP_no_abx, TP_abx, test_results_negative, antibiotics, beta, b, s, rho_1, rho_2, nPatients, nTypes, phi, pt) {
-    .Call(`_mrsamcmc_log_lik_overall_with_types`, admissions, discharges, colonisations, sources, statuses, TP_no_abx, TP_abx, test_results_negative, antibiotics, beta, b, s, rho_1, rho_2, nPatients, nTypes, phi, pt)
+log_lik_overall_with_types <- function(admissions, discharges, colonisations, sources, statuses, TP_no_abx, TP_abx, test_results_negative, antibiotics, beta, b, s, rho_1, rho_2, nPatients, types, types_names, types_freq, nTypes, phi, pt) {
+    .Call(`_mrsamcmc_log_lik_overall_with_types`, admissions, discharges, colonisations, sources, statuses, TP_no_abx, TP_abx, test_results_negative, antibiotics, beta, b, s, rho_1, rho_2, nPatients, types, types_names, types_freq, nTypes, phi, pt)
 }
 
 #' Log likelihood of test sensitivity
@@ -378,8 +378,8 @@ log_lik_rho <- function(colonisations, statuses, TP_no_abx, TP_abx, test_results
 #' @param b the multiplicative effect of antibiotics on transmissibility.
 #'
 #' @export
-log_lik_sources <- function(nPatients, nTypes, admission, colonisation, source, discharge, status, antibiotics, b) {
-    .Call(`_mrsamcmc_log_lik_sources`, nPatients, nTypes, admission, colonisation, source, discharge, status, antibiotics, b)
+log_lik_sources <- function(nPatients, admission, colonisation, source, discharge, status, types, types_names, types_freq, nTypes, antibiotics, b) {
+    .Call(`_mrsamcmc_log_lik_sources`, nPatients, admission, colonisation, source, discharge, status, types, types_names, types_freq, nTypes, antibiotics, b)
 }
 
 #' Log likelihood of transmission

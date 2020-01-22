@@ -76,6 +76,18 @@ run_mcmc_with_types <- function(data = NULL, priors = NULL, configuration = NULL
   n_iter <- configuration$n_iter
   n_burnin <- configuration$n_burnin
 
+
+  #use empirical type frequency for source likelihood
+  types_names <- unique(patients$type)
+  types_names <- types_names[types_names != -1]
+  types_freq <- rep(0,length(types_names))
+  for (k in 1:length(types_names)){
+    types_freq[k] <- length(which(patients$type == types_names[k]))
+  }
+  types_freq <- types_freq/sum(types_freq)
+
+
+
   if ("b" %in% configuration$infer_covariate_effects){
     update_b <- TRUE
   } else {
@@ -771,7 +783,7 @@ run_mcmc_with_types <- function(data = NULL, priors = NULL, configuration = NULL
             log_hastings_ratio = 0
           } else if (status_cand[pt] == "a"){
             # p -> a
-            log_hastings_ratio = log(( dt * n_sources_cand * w) / ( 1 - w ))
+            log_hastings_ratio = log(( dt * n_sources_cand * w) / ( (1 - w) * 1/n_types ))
           }
         } else if (status_cur[pt] == "a"){
           if (status_cand[pt] == "p"){
@@ -800,6 +812,9 @@ run_mcmc_with_types <- function(data = NULL, priors = NULL, configuration = NULL
                                   rho_1_cur,
                                   rho_2_cur,
                                   n_patients,
+                                  patients$type,
+                                  types_names,
+                                  types_freq,
                                   n_types,
                                   phi_cur,
                                   pt)
@@ -819,6 +834,9 @@ run_mcmc_with_types <- function(data = NULL, priors = NULL, configuration = NULL
                                               rho_1_cur,
                                               rho_2_cur,
                                               n_patients,
+                                              type_cand,
+                                              types_names,
+                                              types_freq,
                                               n_types,
                                               phi_cur,
                                               pt)
@@ -897,8 +915,9 @@ run_mcmc_with_types <- function(data = NULL, priors = NULL, configuration = NULL
             #sample a type
             type_cand[pt] = sample(n_types,1)
             source_cand[pt] = 0
+            p_j_star <- types_freq[which(types_names == type_cand[pt])]
+            log_hastings_ratio = log(n_s / ((n_ap + 1) * w * p_j_star))
 
-            log_hastings_ratio = log(n_s / ((n_ap + 1) * w))
           } else {
             status_cand[pt] = "a"
 
@@ -993,6 +1012,9 @@ run_mcmc_with_types <- function(data = NULL, priors = NULL, configuration = NULL
                                      rho_1_cur,
                                      rho_2_cur,
                                      n_patients,
+                                     patients$type,
+                                     types_names,
+                                     types_freq,
                                      n_types,
                                      phi_cur,
                                      pt)
@@ -1013,6 +1035,9 @@ run_mcmc_with_types <- function(data = NULL, priors = NULL, configuration = NULL
                                      rho_1_cur,
                                      rho_2_cur,
                                      n_patients,
+                                     type_cand,
+                                     types_names,
+                                     types_freq,
                                      n_types,
                                      phi_cur,
                                      pt)
@@ -1092,7 +1117,8 @@ run_mcmc_with_types <- function(data = NULL, priors = NULL, configuration = NULL
 
           if(status_cur[pt] == "p") {
             # p --> s
-            log_hastings_ratio = log((n_ap*w)/((n_s+1)))
+            p_j <- types_freq[which(types_names == type_cur[pt])]
+            log_hastings_ratio = log((n_ap*w*p_j)/((n_s+1)))
           }
           else if(status_cur[pt] == "a") {
 
@@ -1136,6 +1162,9 @@ run_mcmc_with_types <- function(data = NULL, priors = NULL, configuration = NULL
                                      rho_1_cur,
                                      rho_2_cur,
                                      n_patients,
+                                     patients$type,
+                                     types_names,
+                                     types_freq,
                                      n_types,
                                      phi_cur,
                                      pt)
@@ -1155,6 +1184,9 @@ run_mcmc_with_types <- function(data = NULL, priors = NULL, configuration = NULL
                                                 rho_1_cur,
                                                 rho_2_cur,
                                                 n_patients,
+                                                type_cand,
+                                                types_names,
+                                                types_freq,
                                                 n_types,
                                                 phi_cur,
                                                 pt)

@@ -175,8 +175,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // log_lik_overall_with_types
-double log_lik_overall_with_types(NumericVector admissions, NumericVector discharges, NumericVector colonisations, NumericVector sources, StringVector statuses, int TP_no_abx, int TP_abx, NumericMatrix test_results_negative, NumericMatrix antibiotics, double beta, double b, double s, double rho_1, double rho_2, int nPatients, int nTypes, double phi, int pt);
-RcppExport SEXP _mrsamcmc_log_lik_overall_with_types(SEXP admissionsSEXP, SEXP dischargesSEXP, SEXP colonisationsSEXP, SEXP sourcesSEXP, SEXP statusesSEXP, SEXP TP_no_abxSEXP, SEXP TP_abxSEXP, SEXP test_results_negativeSEXP, SEXP antibioticsSEXP, SEXP betaSEXP, SEXP bSEXP, SEXP sSEXP, SEXP rho_1SEXP, SEXP rho_2SEXP, SEXP nPatientsSEXP, SEXP nTypesSEXP, SEXP phiSEXP, SEXP ptSEXP) {
+double log_lik_overall_with_types(NumericVector admissions, NumericVector discharges, NumericVector colonisations, NumericVector sources, StringVector statuses, int TP_no_abx, int TP_abx, NumericMatrix test_results_negative, NumericMatrix antibiotics, double beta, double b, double s, double rho_1, double rho_2, int nPatients, NumericVector types, NumericVector types_names, NumericVector types_freq, int nTypes, double phi, int pt);
+RcppExport SEXP _mrsamcmc_log_lik_overall_with_types(SEXP admissionsSEXP, SEXP dischargesSEXP, SEXP colonisationsSEXP, SEXP sourcesSEXP, SEXP statusesSEXP, SEXP TP_no_abxSEXP, SEXP TP_abxSEXP, SEXP test_results_negativeSEXP, SEXP antibioticsSEXP, SEXP betaSEXP, SEXP bSEXP, SEXP sSEXP, SEXP rho_1SEXP, SEXP rho_2SEXP, SEXP nPatientsSEXP, SEXP typesSEXP, SEXP types_namesSEXP, SEXP types_freqSEXP, SEXP nTypesSEXP, SEXP phiSEXP, SEXP ptSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -195,10 +195,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type rho_1(rho_1SEXP);
     Rcpp::traits::input_parameter< double >::type rho_2(rho_2SEXP);
     Rcpp::traits::input_parameter< int >::type nPatients(nPatientsSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type types(typesSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type types_names(types_namesSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type types_freq(types_freqSEXP);
     Rcpp::traits::input_parameter< int >::type nTypes(nTypesSEXP);
     Rcpp::traits::input_parameter< double >::type phi(phiSEXP);
     Rcpp::traits::input_parameter< int >::type pt(ptSEXP);
-    rcpp_result_gen = Rcpp::wrap(log_lik_overall_with_types(admissions, discharges, colonisations, sources, statuses, TP_no_abx, TP_abx, test_results_negative, antibiotics, beta, b, s, rho_1, rho_2, nPatients, nTypes, phi, pt));
+    rcpp_result_gen = Rcpp::wrap(log_lik_overall_with_types(admissions, discharges, colonisations, sources, statuses, TP_no_abx, TP_abx, test_results_negative, antibiotics, beta, b, s, rho_1, rho_2, nPatients, types, types_names, types_freq, nTypes, phi, pt));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -221,21 +224,24 @@ BEGIN_RCPP
 END_RCPP
 }
 // log_lik_sources
-double log_lik_sources(int nPatients, int nTypes, NumericVector admission, NumericVector colonisation, NumericVector source, NumericVector discharge, StringVector status, NumericMatrix antibiotics, double b);
-RcppExport SEXP _mrsamcmc_log_lik_sources(SEXP nPatientsSEXP, SEXP nTypesSEXP, SEXP admissionSEXP, SEXP colonisationSEXP, SEXP sourceSEXP, SEXP dischargeSEXP, SEXP statusSEXP, SEXP antibioticsSEXP, SEXP bSEXP) {
+double log_lik_sources(int nPatients, NumericVector admission, NumericVector colonisation, NumericVector source, NumericVector discharge, StringVector status, NumericVector types, NumericVector types_names, NumericVector types_freq, int nTypes, NumericMatrix antibiotics, double b);
+RcppExport SEXP _mrsamcmc_log_lik_sources(SEXP nPatientsSEXP, SEXP admissionSEXP, SEXP colonisationSEXP, SEXP sourceSEXP, SEXP dischargeSEXP, SEXP statusSEXP, SEXP typesSEXP, SEXP types_namesSEXP, SEXP types_freqSEXP, SEXP nTypesSEXP, SEXP antibioticsSEXP, SEXP bSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< int >::type nPatients(nPatientsSEXP);
-    Rcpp::traits::input_parameter< int >::type nTypes(nTypesSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type admission(admissionSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type colonisation(colonisationSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type source(sourceSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type discharge(dischargeSEXP);
     Rcpp::traits::input_parameter< StringVector >::type status(statusSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type types(typesSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type types_names(types_namesSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type types_freq(types_freqSEXP);
+    Rcpp::traits::input_parameter< int >::type nTypes(nTypesSEXP);
     Rcpp::traits::input_parameter< NumericMatrix >::type antibiotics(antibioticsSEXP);
     Rcpp::traits::input_parameter< double >::type b(bSEXP);
-    rcpp_result_gen = Rcpp::wrap(log_lik_sources(nPatients, nTypes, admission, colonisation, source, discharge, status, antibiotics, b));
+    rcpp_result_gen = Rcpp::wrap(log_lik_sources(nPatients, admission, colonisation, source, discharge, status, types, types_names, types_freq, nTypes, antibiotics, b));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -321,9 +327,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_mrsamcmc_get_ap_with_types", (DL_FUNC) &_mrsamcmc_get_ap_with_types, 4},
     {"_mrsamcmc_log_lik_importation", (DL_FUNC) &_mrsamcmc_log_lik_importation, 3},
     {"_mrsamcmc_log_lik_overall", (DL_FUNC) &_mrsamcmc_log_lik_overall, 16},
-    {"_mrsamcmc_log_lik_overall_with_types", (DL_FUNC) &_mrsamcmc_log_lik_overall_with_types, 18},
+    {"_mrsamcmc_log_lik_overall_with_types", (DL_FUNC) &_mrsamcmc_log_lik_overall_with_types, 21},
     {"_mrsamcmc_log_lik_rho", (DL_FUNC) &_mrsamcmc_log_lik_rho, 8},
-    {"_mrsamcmc_log_lik_sources", (DL_FUNC) &_mrsamcmc_log_lik_sources, 9},
+    {"_mrsamcmc_log_lik_sources", (DL_FUNC) &_mrsamcmc_log_lik_sources, 12},
     {"_mrsamcmc_log_lik_transmission", (DL_FUNC) &_mrsamcmc_log_lik_transmission, 10},
     {"_mrsamcmc_log_lik_transmission_patient_subset", (DL_FUNC) &_mrsamcmc_log_lik_transmission_patient_subset, 9},
     {"_mrsamcmc_onward_check", (DL_FUNC) &_mrsamcmc_onward_check, 7},

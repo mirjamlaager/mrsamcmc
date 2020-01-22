@@ -69,6 +69,9 @@ double log_lik_overall_with_types(NumericVector admissions,
                   double rho_1,
                   double rho_2,
                   int nPatients,
+                  NumericVector types,
+                  NumericVector types_names,
+                  NumericVector types_freq,
                   int nTypes,
                   double phi,
                   int pt) {
@@ -91,16 +94,20 @@ double log_lik_overall_with_types(NumericVector admissions,
                                                   s,
                                                   pt) +
                 log_lik_sources(nPatients,
-                               nTypes,
                                admissions,
                                colonisations,
                                sources,
                                discharges,
                                statuses,
+                               types,
+                               types_names,
+                               types_freq,
+                               nTypes,
                                antibiotics,
                                b) +
                log_lik_importation(nPatients, statuses, phi);
 
   return ll;
 }
+
 

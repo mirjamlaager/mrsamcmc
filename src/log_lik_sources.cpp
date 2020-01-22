@@ -29,12 +29,15 @@ using namespace Rcpp;
 //' @export
 // [[Rcpp::export]]
 double log_lik_sources(int nPatients,
-                 int nTypes,
                  NumericVector admission,
                  NumericVector colonisation,
                  NumericVector source,
                  NumericVector discharge,
                  StringVector status,
+                 NumericVector types,
+                 NumericVector types_names,
+                 NumericVector types_freq,
+                 int nTypes,
                  NumericMatrix antibiotics,
                  double b){
 
@@ -67,11 +70,16 @@ double log_lik_sources(int nPatients,
 
       ll = ll + log(transmissibility_factor / (C_nabx + b*C_abx));
     }
-    if (status[pt] == "p"){n_imports++;}
 
+    if (status[pt] == "p"){
+
+      for (int k = 0; k < nTypes; k++){
+        if (types_names[k] == types[pt]){
+          ll = ll + log(types_freq[k]);
+        }
+      }
+    }
   }
-
-  ll = ll + n_imports * log( 1.0 / nTypes);
 
   return ll;
 }
