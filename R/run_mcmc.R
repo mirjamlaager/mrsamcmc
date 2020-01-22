@@ -137,10 +137,7 @@ run_mcmc <- function(data = NULL, priors = NULL, configuration = NULL){
   s_cur <- 1
 
   rho_1_cur <- 0.5 + 0.5 * runif(1)
-  rho_1_logit_cur <- logit(rho_1_cur)
-
   rho_2_cur <- rho_1_cur
-  rho_2_logit_cur <- logit(rho_2_cur)
 
   phi_cur <- 0.5 * runif(1)
 
@@ -464,81 +461,123 @@ run_mcmc <- function(data = NULL, priors = NULL, configuration = NULL){
                      N_admissions - N_colonised_on_admission + 1)
 
 
-    # update rho 1. The test sensitivity rho is between 0 and 1, but likely to
-    # be close to 1. To ensure good exploration of the space close to one
-    # we logit transform the parameters.
+    # update rho 1 and rho 2. Without inference on effects of antibiotics on test
+    # sensitivity
+
+    if (update_r == FALSE){
+
     log_lik_rho_cur <- log_lik_rho(patients$colonisation,
                                    patients$status,
                                    TP_no_abx,
                                    TP_abx,
                                    test_results_negative,
                                    antibiotics,
-                                   invlogit(rho_1_logit_cur),
-                                   invlogit(rho_2_logit_cur))
+                                   rho_1_cur,
+                                   rho_2_cur)
 
-    rho_1_logit_cand <- rnorm(1, rho_1_logit_cur, sigma_rho_1)
+    rho_1_cand <- rnorm(1, rho_1_cur, sigma_rho_1)
+    rho_2_cand <- rho_1_cand
 
+    if (0 < rho_1_cand & rho_1_cand < 1){
     log_lik_rho_cand <- log_lik_rho(patients$colonisation,
                                     patients$status,
                                     TP_no_abx,
                                     TP_abx,
                                     test_results_negative,
                                     antibiotics,
-                                    invlogit(rho_1_logit_cand),
-                                    invlogit(rho_2_logit_cur))
+                                    rho_1_cand,
+                                    rho_2_cand)
 
 
-    jacobian_cur <- log(invlogit(rho_1_logit_cur)) +
-      log(1 - invlogit(rho_1_logit_cur))
+    jacobian_cur <- log(rho_1_cur) +
+      log(1 - rho_1_cur)
 
-    jacobian_cand <- log(invlogit(rho_1_logit_cand)) +
-      log(1 - invlogit(rho_1_logit_cand))
+    jacobian_cand <- log(rho_1_cand) +
+      log(1 - rho_1_cand)
 
     log_proposal_ratio <- log_lik_rho_cand + jacobian_cand -
       (log_lik_rho_cur + jacobian_cur)
 
     if (log(runif(1, 0, 1)) < log_proposal_ratio){
-      rho_1_logit_cur <- rho_1_logit_cand
-      rho_1_cur <- invlogit(rho_1_logit_cur)
+      rho_1_cur <- rho_1_cand
+      rho_2_cur <- rho_2_cand
       N_accepted_rho_1 <- N_accepted_rho_1 + 1
-      log_lik_rho_cur <- log_lik_rho_cand
+    }
+    }
     }
 
-
-
-    # update rho_2. The test sensitivity rho is between 0 and 1, but likely to
-    # be close to 1. To ensure good exploration of the space close to one
-    # we logit transform the parameters.
+    # update rho_1 and rho_2 with inference on effects of antibiotics on
+    # test sensitivity
 
     if (update_r == TRUE){
-    rho_2_logit_cand <- rnorm(1, rho_2_logit_cur, sigma_rho_2)
 
-    log_lik_rho_cand <- log_lik_rho(patients$colonisation,
-                                    patients$status,
-                                    TP_no_abx,
-                                    TP_abx,
-                                    test_results_negative,
-                                    antibiotics,
-                                    invlogit(rho_1_logit_cur),
-                                    invlogit(rho_2_logit_cand))
+      log_lik_rho_cur <- log_lik_rho(patients$colonisation,
+                                     patients$status,
+                                     TP_no_abx,
+                                     TP_abx,
+                                     test_results_negative,
+                                     antibiotics,
+                                     rho_1_cur,
+                                     rho_2_cur)
+
+      rho_1_cand <- rnorm(1, rho_1_cur, sigma_rho_1)
+
+      if (0 < rho_1_cand & rho_1_cand < 1){
+      log_lik_rho_cand <- log_lik_rho(patients$colonisation,
+                                      patients$status,
+                                      TP_no_abx,
+                                      TP_abx,
+                                      test_results_negative,
+                                      antibiotics,
+                                      rho_1_cand,
+                                      rho_2_cur)
 
 
-    jacobian_cur <- log(invlogit(rho_2_logit_cur)) +
-      log(1 - invlogit(rho_2_logit_cur))
+      jacobian_cur <- log(rho_1_cur) +
+        log(1 - rho_1_cur)
 
-    jacobian_cand <- log(invlogit(rho_2_logit_cand)) +
-      log(1 - invlogit(rho_2_logit_cand))
+      jacobian_cand <- log(rho_1_cand) +
+        log(1 - rho_1_cand)
 
-    log_proposal_ratio <- log_lik_rho_cand + jacobian_cand -
-      (log_lik_rho_cur + jacobian_cur)
+      log_proposal_ratio <- log_lik_rho_cand + jacobian_cand -
+        (log_lik_rho_cur + jacobian_cur)
 
-    if (log(runif(1)) < log_proposal_ratio){
-      rho_2_logit_cur <- rho_2_logit_cand
-      rho_2_cur <- invlogit(rho_2_logit_cur)
-      N_accepted_rho_2 <- N_accepted_rho_2 + 1
-    }
-    } else {
-      rho_2_cur <- rho_1_cur
+      if (log(runif(1, 0, 1)) < log_proposal_ratio){
+        rho_1_cur <- rho_1_cand
+        N_accepted_rho_1 <- N_accepted_rho_1 + 1
+        log_lik_rho_cur <- log_lik_rho_cand
+      }
+      }
+
+      # update rho_2.
+
+      rho_2_cand <- rnorm(1, rho_2_cur, sigma_rho_2)
+
+      if (0 < rho_2_cand & rho_2_cand < 1){
+      log_lik_rho_cand <- log_lik_rho(patients$colonisation,
+                                      patients$status,
+                                      TP_no_abx,
+                                      TP_abx,
+                                      test_results_negative,
+                                      antibiotics,
+                                      rho_1_cur,
+                                      rho_2_cand)
+
+
+        jacobian_cur <- log(rho_2_cur) +
+          log(1 - rho_2_cur)
+
+        jacobian_cand <- log(rho_2_cand) +
+          log(1 - rho_2_cand)
+
+        log_proposal_ratio <- log_lik_rho_cand + jacobian_cand -
+          (log_lik_rho_cur + jacobian_cur)
+
+        if (log(runif(1)) < log_proposal_ratio){
+          rho_2_cur <- rho_2_cand
+          N_accepted_rho_2 <- N_accepted_rho_2 + 1
+        }
+      }
     }
 
 
